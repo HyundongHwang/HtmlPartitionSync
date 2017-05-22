@@ -3,6 +3,7 @@
 - [HtmlPartitionSync](#htmlpartitionsync)
     - [소개](#소개)
     - [사용방법](#사용방법)
+    - [테스트](#테스트)
     - [예제](#예제)
     - [레퍼런스](#레퍼런스)
 
@@ -45,6 +46,9 @@
     <div><br /></div>
     <div>끝 ...</div>
     ```
+
+## 테스트
+- https://htmlpartitionsync.blob.core.windows.net/www/index.html
 
 ## 예제
 - https://hhd2002.blogspot.kr/2017/05/170518-htmlpartitionsync.html

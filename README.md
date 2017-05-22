@@ -3,6 +3,7 @@
 - [HtmlPartitionSync](#htmlpartitionsync)
     - [Introduce](#introduce)
     - [How to use](#how-to-use)
+    - [test](#test)
     - [example](#example)
     - [reference](#reference)
 
@@ -46,6 +47,9 @@
     <div><br /></div>
     <div>finish ...</div>
     ```
+
+## test
+- https://htmlpartitionsync.blob.core.windows.net/www/index.html
 
 ## example
 - https://hhd2002.blogspot.kr/2017/05/170518-htmlpartitionsync.html
