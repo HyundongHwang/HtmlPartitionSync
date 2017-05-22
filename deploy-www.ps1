@@ -1,0 +1,1 @@
+hhdupload -FILE_NAME www\* -AZURE_STORAGE_CONNECTION_STR (cat .\.azure-storage-key) -AZURE_STORAGE_CONTAINER www
