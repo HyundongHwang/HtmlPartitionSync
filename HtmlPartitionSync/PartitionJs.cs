@@ -44,7 +44,7 @@ namespace HtmlPartitionSync
                 sb.AppendLine(linkNodeWriteStr);
             }
 
-            var xpathNodeWriteStr = $"document.write('{xpathNode.OuterHtml.Replace("\n", "\\n").Replace("\"", "\\\"").Replace("'", "\\'")}')";
+            var xpathNodeWriteStr = $"document.write('{xpathNode.OuterHtml.Replace("\r", "").Replace("\n", "\\n").Replace("\"", "\\\"").Replace("'", "\\'")}')";
             sb.AppendLine(xpathNodeWriteStr);
             var res = req.CreateResponse(HttpStatusCode.OK);
             res.Content = new StringContent(sb.ToString());
@@ -55,6 +55,8 @@ namespace HtmlPartitionSync
     }
 }
 
+//https://htmlpartitionsync.azurewebsites.net/api/PartitionJs?url=http%3A%2F%2Fwww.yes24.com%2F24%2FGoods%2F40759884&xpath=%2F%2F*%5B%40id%3D%22contents%22%5D%2Fdiv%5B3%5D%2Fp%5B1%5D
+//http://localhost:7071/api/PartitionJs?url=http%3A%2F%2Fwww.yes24.com%2F24%2FGoods%2F40759884&xpath=%2F%2F*%5B%40id%3D%22contents%22%5D%2Fdiv%5B3%5D%2Fp%5B1%5D
 
 
 //https://htmlpartitionsync.azurewebsites.net/api/PartitionJs?url=https%3A%2F%2Fgithub.com%2FHyundongHwang%2Fhhdps%2Fblob%2Fmaster%2FREADME.md&xpath=%252F%252Farticle
