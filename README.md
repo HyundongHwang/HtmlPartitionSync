@@ -49,7 +49,7 @@
     ```
 
 ## test
-- https://htmlpartitionsync.blob.core.windows.net/www/index.html
+- https://htmlpartitionsybe9c.blob.core.windows.net/www/index.html
 
 ## example
 - https://hhd2002.blogspot.kr/2017/05/170518-htmlpartitionsync.html

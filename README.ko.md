@@ -48,7 +48,7 @@
     ```
 
 ## 테스트
-- https://htmlpartitionsync.blob.core.windows.net/www/index.html
+- https://htmlpartitionsybe9c.blob.core.windows.net/www/index.html
 
 ## 예제
 - https://hhd2002.blogspot.kr/2017/05/170518-htmlpartitionsync.html

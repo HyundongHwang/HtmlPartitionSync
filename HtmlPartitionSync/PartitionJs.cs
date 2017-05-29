@@ -9,6 +9,12 @@ using System.Threading.Tasks;
 using System.Web;
 using HtmlAgilityPack;
 using System.Text;
+using Microsoft.WindowsAzure.Storage;
+using System.Security.Policy;
+using System;
+using System.Security.Cryptography;
+using System.IO;
+using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace HtmlPartitionSync
 {
@@ -18,42 +24,77 @@ namespace HtmlPartitionSync
 
         public static async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")]HttpRequestMessage req, TraceWriter log)
         {
-            log.Info("C# HTTP trigger function processed a request.");
+            log.Info("PartitionJs.Run start ...");
             var kvPairs = req.GetQueryNameValuePairs();
             var paramUrl = kvPairs.FirstOrDefault(kv => kv.Key == "url").Value;
             var paramXPath = kvPairs.FirstOrDefault(kv => kv.Key == "xpath").Value;
+            log.Info($"PartitionJs.Run paramUrl : {paramUrl}");
+            log.Info($"PartitionJs.Run paramXPath : {paramXPath}");
             var url = HttpUtility.UrlDecode(paramUrl);
             var xpath = HttpUtility.UrlDecode(paramXPath);
             var htmlStr = "";
+            var hashStr = "";
 
-            using (var client = new HttpClient())
+            using (var sha = new SHA256Managed())
             {
-                htmlStr = await client.GetStringAsync(url);
+                var keyBuf = Encoding.UTF8.GetBytes($"{url} {xpath}");
+                byte[] hashBuf = sha.ComputeHash(keyBuf);
+                hashStr = BitConverter.ToString(hashBuf);
             }
 
-            var doc = new HtmlDocument();
-            doc.LoadHtml(htmlStr);
-            var linkNodeList = doc.DocumentNode.SelectNodes("//link");
-            var xpathNode = doc.DocumentNode.SelectSingleNode(xpath);
+            var storageAccount = CloudStorageAccount.Parse("DefaultEndpointsProtocol=https;AccountName=htmlpartitionsybe9c;AccountKey=Ggnn7AsIp2ihTaRquNyvsa3whob82H1muxZIqOj+X6/vN8ByiACz8HOMX/xZdHQBnIlNlPEnBPzSMKBHoKWqCw==;EndpointSuffix=core.windows.net");
+            var blobClient = storageAccount.CreateCloudBlobClient();
+            var container = blobClient.GetContainerReference("jscache");
+            var blob = container.GetBlockBlobReference(hashStr);
+            var content = "";
 
-            var sb = new StringBuilder();
-
-            foreach (var linkNode in linkNodeList)
+            if (blob.Exists())
             {
-                var linkNodeWriteStr = $"document.write('{linkNode.OuterHtml.Replace("\\", "\\\\").Replace("\r", "").Replace("\n", "\\n").Replace("\"", "\\\"").Replace("'", "\\'").Replace("</", "<\\/")}')";
-                sb.AppendLine(linkNodeWriteStr);
+                using (var os = blob.OpenRead())
+                using (var sr = new StreamReader(os))
+                {
+                    content = sr.ReadToEnd();
+                }
+            }
+            else
+            {
+                var sb = new StringBuilder();
+
+                using (var client = new HttpClient())
+                {
+                    htmlStr = await client.GetStringAsync(url);
+                }
+
+                var doc = new HtmlDocument();
+                doc.LoadHtml(htmlStr);
+                var linkNodeList = doc.DocumentNode.SelectNodes("//link");
+                var xpathNode = doc.DocumentNode.SelectSingleNode(xpath);
+
+                foreach (var linkNode in linkNodeList)
+                {
+                    var linkNodeWriteStr = $"document.write('{linkNode.OuterHtml.Replace("\\", "\\\\").Replace("\r", "").Replace("\n", "\\n").Replace("\"", "\\\"").Replace("'", "\\'").Replace("</", "<\\/")}')";
+                    sb.AppendLine(linkNodeWriteStr);
+                }
+
+                var xpathNodeWriteStr = $"document.write('{xpathNode.OuterHtml.Replace("\\", "\\\\").Replace("\r", "").Replace("\n", "\\n").Replace("\"", "\\\"").Replace("'", "\\'").Replace("</", "<\\/")}')";
+                sb.AppendLine(xpathNodeWriteStr);
+                content = sb.ToString();
+                blob.UploadText(content);
             }
 
-            var xpathNodeWriteStr = $"document.write('{xpathNode.OuterHtml.Replace("\\", "\\\\").Replace("\r", "").Replace("\n", "\\n").Replace("\"", "\\\"").Replace("'", "\\'").Replace("</", "<\\/")}')";
-            sb.AppendLine(xpathNodeWriteStr);
             var res = req.CreateResponse(HttpStatusCode.OK);
-            res.Content = new StringContent(sb.ToString());
+            res.Content = new StringContent(content);
             res.Content.Headers.ContentType = new MediaTypeHeaderValue("text/javascript");
             res.Content.Headers.ContentType.CharSet = "utf-8";
+            log.Info("PartitionJs.Run end !!!");
             return res;
         }
     }
 }
+
+
+
+//DefaultEndpointsProtocol=https;AccountName=htmlpartitionsync;AccountKey=80cyi/ziUe1bxY8ydgq4Jf/97M74as6Ey/y4mOnW1K5Ktgh5hsmN+oMd61SeQqseMZ3vyK4mDeCETmsOBA2tFg==;EndpointSuffix=core.windows.net
 
 //https://htmlpartitionsync.azurewebsites.net/api/PartitionJs?url=http%3A%2F%2Fwww.yes24.com%2F24%2FGoods%2F40759884&xpath=%2F%2F*%5B%40id%3D%22contents%22%5D%2Fdiv%5B3%5D%2Fp%5B1%5D
 //http://localhost:7071/api/PartitionJs?url=http%3A%2F%2Fwww.yes24.com%2F24%2FGoods%2F40759884&xpath=%2F%2F*%5B%40id%3D%22contents%22%5D%2Fdiv%5B3%5D%2Fp%5B1%5D
