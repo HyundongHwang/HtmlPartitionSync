@@ -40,11 +40,11 @@ namespace HtmlPartitionSync
 
             foreach (var linkNode in linkNodeList)
             {
-                var linkNodeWriteStr = $"document.write('{linkNode.OuterHtml.Replace("\n", "\\n").Replace("\"", "\\\"").Replace("'", "\\'")}')";
+                var linkNodeWriteStr = $"document.write('{linkNode.OuterHtml.Replace("\\", "\\\\").Replace("\r", "").Replace("\n", "\\n").Replace("\"", "\\\"").Replace("'", "\\'").Replace("</", "<\\/")}')";
                 sb.AppendLine(linkNodeWriteStr);
             }
 
-            var xpathNodeWriteStr = $"document.write('{xpathNode.OuterHtml.Replace("\r", "").Replace("\n", "\\n").Replace("\"", "\\\"").Replace("'", "\\'")}')";
+            var xpathNodeWriteStr = $"document.write('{xpathNode.OuterHtml.Replace("\\", "\\\\").Replace("\r", "").Replace("\n", "\\n").Replace("\"", "\\\"").Replace("'", "\\'").Replace("</", "<\\/")}')";
             sb.AppendLine(xpathNodeWriteStr);
             var res = req.CreateResponse(HttpStatusCode.OK);
             res.Content = new StringContent(sb.ToString());
