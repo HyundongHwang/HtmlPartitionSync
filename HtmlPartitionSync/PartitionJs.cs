@@ -28,10 +28,14 @@ namespace HtmlPartitionSync
             var kvPairs = req.GetQueryNameValuePairs();
             var paramUrl = kvPairs.FirstOrDefault(kv => kv.Key == "url").Value;
             var paramXPath = kvPairs.FirstOrDefault(kv => kv.Key == "xpath").Value;
+            var paramUpdate = kvPairs.FirstOrDefault(kv => kv.Key == "update").Value;
             log.Info($"PartitionJs.Run paramUrl : {paramUrl}");
             log.Info($"PartitionJs.Run paramXPath : {paramXPath}");
+            log.Info($"PartitionJs.Run paramUpdate : {paramUpdate}");
             var url = HttpUtility.UrlDecode(paramUrl);
             var xpath = HttpUtility.UrlDecode(paramXPath);
+            var update = false;
+            bool.TryParse(paramUpdate, out update);
             var htmlStr = "";
             var hashStr = "";
 
@@ -46,17 +50,19 @@ namespace HtmlPartitionSync
             var blobClient = storageAccount.CreateCloudBlobClient();
             var container = blobClient.GetContainerReference("jscache");
             var blob = container.GetBlockBlobReference(hashStr);
-            var content = "";
 
             if (blob.Exists())
             {
                 using (var os = blob.OpenRead())
-                using (var sr = new StreamReader(os))
                 {
-                    content = sr.ReadToEnd();
+                    var cacheTimeout = (DateTime.UtcNow - blob.Properties.LastModified) > TimeSpan.FromDays(1);
+                    update = update || cacheTimeout;
                 }
             }
-            else
+
+            var content = "";
+
+            if (update)
             {
                 var sb = new StringBuilder();
 
@@ -80,6 +86,14 @@ namespace HtmlPartitionSync
                 sb.AppendLine(xpathNodeWriteStr);
                 content = sb.ToString();
                 blob.UploadText(content);
+            }
+            else
+            {
+                using (var os = blob.OpenRead())
+                using (var sr = new StreamReader(os))
+                {
+                    content = sr.ReadToEnd();
+                }
             }
 
             var res = req.CreateResponse(HttpStatusCode.OK);
