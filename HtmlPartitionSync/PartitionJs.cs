@@ -59,6 +59,10 @@ namespace HtmlPartitionSync
                     update = update || cacheTimeout;
                 }
             }
+            else
+            {
+                update = true;
+            }
 
             var content = "";
 
